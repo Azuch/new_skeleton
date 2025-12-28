@@ -86,8 +86,9 @@ static char* state_to_str(enum sensor_state s) {
 		case SENSOR_STATE_ERROR:	return "ERROR";
 		case SENSOR_STATE_READ: 	return "READ";
 		default:			return "UNKNOWN";
+	
 	}
-
+}
 //Define a set_state helper
 
 void set_state(enum sensor_state next) {
