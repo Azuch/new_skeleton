@@ -8,5 +8,6 @@ target_sources(app PRIVATE
 	src/main.c
 	src/app.c
 	src/system_event.c
+	src/sensor_fsm.c
 )
 				
