@@ -3,7 +3,7 @@
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(sensor_fsm, LOG_LEVEL_INF);
-
+#define SENSOR_MAX_RETRY 3
 //Define enum event for sensor
 
 enum sensor_event {
@@ -16,10 +16,10 @@ enum sensor_event {
 
 //Define struct stage for sensor
 
-struct sensor_state {
+enum sensor_state {
 	SENSOR_STATE_INIT,
 	SENSOR_STATE_READ,
-	SENSOR_STATE_READY,
+	SENSOR_STATE_IDLE,
 	SENSOR_STATE_ERROR,
 	SENSOR_STATE_RECOVERY,
 };
@@ -28,7 +28,7 @@ struct sensor_state {
 //Define context for sensor
 
 static struct {
-	sensor_state state;
+	enum sensor_state state;
 	uint8_t retry_count;
 } sensor_ctx;
 
@@ -38,14 +38,14 @@ K_MSGQ_DEFINE(sensor_data_q, sizeof(struct sensor_sample), 10, 4);
 
 //Define function sensor_data_available()
 
-void sensor_data_available(void) {
-	return k_msgq_num_used_get(&sensor_data_q) > 0;
+bool sensor_data_available(void) {
+	return (k_msgq_num_used_get(&sensor_data_q) > 0);
 }
 
 //Define function sensor_data_get()
 
-void sensor_data_get(struct sensor_sample *out) {
-	return k_msgq_get(&sensor_data_q, out, K_NO_WAIT) == 0;
+bool sensor_data_get(struct sensor_sample *out) {
+	return (k_msgq_get(&sensor_data_q, out, K_NO_WAIT) == 0);
 }
 
 //Define function sensor_hw_init()
