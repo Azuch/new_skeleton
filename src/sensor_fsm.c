@@ -65,6 +65,7 @@ static bool sensor_hw_read(struct sensor_sample *out) {
 	}
 
 	out->value = counter * 10;
+	LOG_INF("Readed: %d", counter);
 	return true;
 }
 
@@ -76,6 +77,25 @@ void sensor_fsm_init(void) {
 	LOG_INF("Sensor fsm initialized");
 }
 
+//Define a state_to_str helper
+
+static char* state_to_str(enum sensor_state s) {
+	switch(s) {
+		case SENSOR_STATE_INIT: 	return "INIT";
+		case SENSOR_STATE_IDLE:		return "IDLE";
+		case SENSOR_STATE_ERROR:	return "ERROR";
+		case SENSOR_STATE_READ: 	return "READ";
+		default:			return "UNKNOWN";
+	}
+
+//Define a set_state helper
+
+void set_state(enum sensor_state next) {
+	if (sensor_ctx.state != next) {
+		LOG_INF("State %s -> %s", state_to_str(sensor_ctx.state), state_to_str(next));
+	}
+}
+
 //Define function sensor_fsm_step()
 
 void sensor_fsm_step(void) {
@@ -84,32 +104,32 @@ void sensor_fsm_step(void) {
 	switch (sensor_ctx.state) {
 		case SENSOR_STATE_INIT:
 			if(!sensor_hw_init()) {
-				sensor_ctx.state = SENSOR_STATE_ERROR;
+				set_state(SENSOR_STATE_ERROR);
 				break;
 			}
-			sensor_ctx.state = SENSOR_STATE_READ;
+			set_state(SENSOR_STATE_READ);
 			break;
 		case SENSOR_STATE_READ:
 			if (!sensor_hw_read(&sample)) {
-				sensor_ctx.state = SENSOR_STATE_ERROR;
+				set_state(SENSOR_STATE_ERROR);
 				break;
 			}
-			sensor_ctx.state = SENSOR_STATE_IDLE;
+			set_state(SENSOR_STATE_IDLE);
 			break;
 		case SENSOR_STATE_IDLE:
-			k_msleep(1500);
-			sensor_ctx.state = SENSOR_STATE_READ;
+			k_msleep(1000);
+			set_state(SENSOR_STATE_READ);
 			break;
 		case SENSOR_STATE_ERROR:
 			sensor_ctx.retry_count++;
 			if (sensor_ctx.retry_count <= SENSOR_MAX_RETRY) {
-				sensor_ctx.state = SENSOR_STATE_IDLE;
+				set_state(SENSOR_STATE_IDLE);
 			} else {
-				sensor_ctx.state = SENSOR_STATE_RECOVERY;
+				set_state(SENSOR_STATE_RECOVERY);
 			}
 			break;
 		case SENSOR_STATE_RECOVERY:
-			sensor_ctx.state = SENSOR_STATE_INIT;
+			set_state(SENSOR_STATE_INIT);
 			break;
 		}
 }
