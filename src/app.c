@@ -1,5 +1,6 @@
 #include "app.h"
 #include "system_event.h"
+#include "sensor_fsm.h"
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/watchdog.h>
 #include <zephyr/device.h>
@@ -45,10 +46,12 @@ void watchdog_kick(void) {
 void app_run(void) {
 	g_app.count++;
 	LOG_INF("Started: %d", g_app.count);
+	sensor_fsm_init();
 	system_event_post(EVENT_START);
 	enum system_event evt;
 	watchdog_init();
 	while(1) {
+		sensor_fsm_step();
 		system_event_get(&evt);
 		switch(evt) {
 			case EVENT_START:
