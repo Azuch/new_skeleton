@@ -2,11 +2,12 @@
 #include "system_event.h"
 #include "sensor_fsm.h"
 #include "wifi_fsm.h"
+#include "http_fsm.h"
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/watchdog.h>
 #include <zephyr/device.h>
 
-LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(APP, LOG_LEVEL_INF);
 
 static struct g_app {
 	int count;
@@ -50,6 +51,7 @@ void app_run(void) {
 
 	sensor_fsm_init();
 	wifi_fsm_init();
+	http_fsm_init();
 
 	system_event_post(EVENT_START);
 	enum system_event evt;
@@ -58,6 +60,7 @@ void app_run(void) {
 
 		sensor_fsm_step();
 		wifi_fsm_step();
+		http_fsm_step();
 
 		system_event_get(&evt);
 		
