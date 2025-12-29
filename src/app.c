@@ -61,6 +61,7 @@ void app_run(void) {
 				LOG_ERR("Error in catching event");
 				break;
 		}
+		system_event_post(EVENT_START);
 		watchdog_kick();
 	}
 }

@@ -94,6 +94,7 @@ static char* state_to_str(enum sensor_state s) {
 void set_state(enum sensor_state next) {
 	if (sensor_ctx.state != next) {
 		LOG_INF("State %s -> %s", state_to_str(sensor_ctx.state), state_to_str(next));
+		sensor_ctx.state = next;
 	}
 }
 
