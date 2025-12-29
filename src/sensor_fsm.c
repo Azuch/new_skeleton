@@ -85,6 +85,7 @@ static char* state_to_str(enum sensor_state s) {
 		case SENSOR_STATE_IDLE:		return "IDLE";
 		case SENSOR_STATE_ERROR:	return "ERROR";
 		case SENSOR_STATE_READ: 	return "READ";
+		case SENSOR_STATE_RECOVERY:	return "RECOVERY";
 		default:			return "UNKNOWN";
 	
 	}
@@ -119,7 +120,7 @@ void sensor_fsm_step(void) {
 			set_state(SENSOR_STATE_IDLE);
 			break;
 		case SENSOR_STATE_IDLE:
-			k_msleep(1000);
+			k_msleep(2000);
 			set_state(SENSOR_STATE_READ);
 			break;
 		case SENSOR_STATE_ERROR:
