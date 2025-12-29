@@ -28,9 +28,12 @@ static struct {
 	uint8_t retry_count;
 	uint64_t backoff_untill;
 	bool connected;
-};
+} wifi_ctx;
 
 static struct net_mgmt_event_callback wifi_mgmt_cb;
+static void set_state(enum wifi_state next);
+static char *state_to_str(enum wifi_state s);
+
 
 static void wifi_mgmt_handler (struct net_mgmt_event_callback *cb,
 				uint64_t mgmt_event,
@@ -48,7 +51,7 @@ static void wifi_mgmt_handler (struct net_mgmt_event_callback *cb,
 	}
 }
 
-static char* state_to_str(enum sensor_state s) {
+static char* state_to_str(enum wifi_state s) {
 	switch(s) {
 		case WIFI_STATE_INIT: 		return "INIT";
 		case WIFI_STATE_CONNECTING:	return "CONNECTING";
@@ -73,10 +76,10 @@ bool wifi_is_connected(void) {
 
 void wifi_fsm_init(void) {
 	wifi_ctx.connected = false;
-	set_state(WIFI_STATE_INIT);
+	wifi_ctx.state = WIFI_STATE_INIT;
 	
 	//Create network callback on wifi CONNECT and DISCONNECT event
-	net_mgmt_event_callback(&wifi_mgmt_cb, wifi_mgmt_handler, NET_EVENT_WIFI_CONNECT_RESULT | NET_EVENT_WIFI_DISCONNECT_RESULT);
+	net_mgmt_init_event_callback(&wifi_mgmt_cb, wifi_mgmt_handler, NET_EVENT_WIFI_CONNECT_RESULT | NET_EVENT_WIFI_DISCONNECT_RESULT);
 	//Assign new callback
 	net_mgmt_add_event_callback(&wifi_mgmt_cb);
 	//LOG it
@@ -102,7 +105,7 @@ void wifi_fsm_step(void) {
 			params.band = WIFI_FREQ_BAND_2_4_GHZ;
 
 			net_mgmt(NET_REQUEST_WIFI_CONNECT, iface, &params, sizeof(params));
-			wifi_ctx.state = WIFI_STATE_CONNECTING;
+			set_state(WIFI_STATE_CONNECTING);
 			break;
 		case WIFI_STATE_CONNECTING:
 			//Keep waiting
