@@ -10,5 +10,6 @@ target_sources(app PRIVATE
 	src/system_event.c
 	src/sensor_fsm.c
 	src/wifi_fsm.c
+	src/http_fsm.c
 )
 				
