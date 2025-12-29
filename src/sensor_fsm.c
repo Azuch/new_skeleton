@@ -65,6 +65,7 @@ static bool sensor_hw_read(struct sensor_sample *out) {
 	}
 
 	out->value = counter * 10;
+	k_msgq_put(&sensor_data_q, out, K_NO_WAIT);
 	LOG_INF("Readed: %d", counter);
 	return true;
 }
