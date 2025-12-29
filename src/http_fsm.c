@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define HTTP_BACKOFF_MS 2000
 
@@ -18,7 +19,7 @@ enum http_state {
 	HTTP_STATE_IDLE,
 	HTTP_STATE_SEND,
 	HTTP_STATE_BACKOFF,
-}
+};
 
 static struct {
 	enum http_state state;
@@ -40,7 +41,7 @@ static char* state_to_str(enum http_state s) {
 }
 //Define a set_state helper
 
-void set_state(enum http_state next) {
+static void set_state(enum http_state next) {
         if (http_ctx.state != next) {
                 LOG_INF("State %s -> %s", state_to_str(http_ctx.state), state_to_str(next));
                 http_ctx.state = next;
@@ -50,7 +51,25 @@ void set_state(enum http_state next) {
 //Define a http_client_send helper
 bool http_client_send(const char* data) {
 	int sock;
-	struct addr_in addr;
+	struct sockaddr_in addr;
+
+	// Buffer to hold the entire HTTP request
+	char http_req[256];
+	int http_req_len;
+
+	// Construct the HTTP POST request
+	http_req_len = snprintf(http_req, sizeof(http_req),
+				"POST / HTTP/1.1\r\n"
+				"Host: 192.168.0.189:8899\r\n"
+				"Content-Type: application/json\r\n"
+				"Content-Length: %d\r\n\r\n"
+				"%s",
+				strlen(data), data);
+	if (http_req_len >= sizeof(http_req)) {
+		LOG_ERR("HTTP request buffer too small");
+		return false;
+	}
+
 
 	sock = zsock_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sock < 0) {
@@ -60,7 +79,7 @@ bool http_client_send(const char* data) {
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(8899);
-	zsock_inet_pton(AF_INET, "192.168.0.189", &addr.sin_family);
+	zsock_inet_pton(AF_INET, "192.168.0.189", &addr.sin_addr);
 
 	if (zsock_connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		LOG_ERR("In connecting socket");
@@ -68,22 +87,22 @@ bool http_client_send(const char* data) {
 		return false;
 	}
 
-	zsock_send(sock, data, strlen(data), 0);
+	zsock_send(sock, http_req, http_req_len, 0);
 	zsock_close(sock);
 	return true;
 }
 
 void http_fsm_init(void) {
 	LOG_INF("HTTP FSM initialized.");
-	http_fsm.state = HTTP_STATE_INIT;
+	http_ctx.state = HTTP_STATE_INIT;
 }
 
-void http_fsm_init(void) {
+void http_fsm_step(void) {
 
-	struct sensor_sample *sample;
+	struct sensor_sample sample;
 	char data[64];
 
-	switch (http_fsm.state) {
+	switch (http_ctx.state) {
 		case HTTP_STATE_INIT:
 			if(wifi_is_connected()) {
 				set_state(HTTP_STATE_IDLE);
@@ -99,9 +118,9 @@ void http_fsm_init(void) {
 				break;
 			}
 		case HTTP_STATE_SEND:
-			if (sensor_data_get(sample)) {
+			if (sensor_data_get(&sample)) {
 
-				snprintk(data, sizeof(data), "{\"value\": %d}", sample->value);
+				snprintf(data, sizeof(data), "{\"value\": %d}", sample.value);
 
 				if (http_client_send(data)) {
 					set_state(HTTP_STATE_IDLE);
