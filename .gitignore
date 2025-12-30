@@ -1,3 +1,5 @@
 build/
 GEMINI.md
 .swp
+__pycache__/
+certs/
