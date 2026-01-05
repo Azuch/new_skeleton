@@ -3,13 +3,14 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(demo_skeleton)
 
-target_sources(app PRIVATE
-	src/main.c
-	src/app.c
-	src/system_event.c
-	src/sensor_fsm.c
-	src/wifi_fsm.c
-	src/http_fsm.c
-	src/http_transport.c
-)
-				
+FILE(GLOB app_sources src/*.c)
+target_sources(app PRIVATE ${app_sources})
+
+set(gen_dir ${ZEPHYR_BINARY_DIR}/include/generated/)
+
+generate_inc_file_for_target(
+    app
+    src/r1.der
+    ${gen_dir}/r1.der.inc
+    )
+

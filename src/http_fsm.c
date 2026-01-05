@@ -50,6 +50,10 @@ static void set_state(enum http_state next) {
 }
 
 void http_fsm_init(void) {
+	if (http_transport_init() != 0) {
+		LOG_ERR("Failed to initialize HTTP transport");
+		// Handle initialization failure, maybe by moving to an error state
+	}
 	LOG_INF("HTTP FSM initialized.");
 	http_ctx.state = HTTP_STATE_INIT;
 }
@@ -63,26 +67,23 @@ void http_fsm_step(void) {
 		case HTTP_STATE_INIT:
 			if(wifi_is_connected()) {
 				set_state(HTTP_STATE_IDLE);
-				break;
-			} else {
-				break;
 			}
+			break;
 		case HTTP_STATE_IDLE:
 			if(sensor_data_available()) {
 				set_state(HTTP_STATE_SEND);
-				break;
-			} else {
-				break;
 			}
+			break;
 		case HTTP_STATE_SEND:
 			if (sensor_data_get(&sample)) {
-
 				snprintf(data, sizeof(data), "{\"value\": %d}", sample.value);
 
-				if (http_transport_send(data)) {
+				if (http_transport_send(data) >= 0) {
+					LOG_INF("HTTP transport operation successful");
 					set_state(HTTP_STATE_IDLE);
-					break;
+					break; // Break only on success
 				}
+				LOG_WRN("HTTP transport operation failed, entering backoff");
 			}
 
 			http_ctx.backoff_until = k_uptime_get() + HTTP_BACKOFF_MS;
@@ -91,7 +92,7 @@ void http_fsm_step(void) {
 		case HTTP_STATE_BACKOFF:
 			if(k_uptime_get() >= http_ctx.backoff_until) {
 				set_state(HTTP_STATE_INIT);
-				break;
 			}
+			break; // Always break
 	}
 }

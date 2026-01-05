@@ -25,7 +25,7 @@ void watchdog_init(void) {
 	struct wdt_timeout_cfg cfg = {
 		.window = {
 			.min = 0,
-			.max = 5000,
+			.max = 15000,
 		},
 		.callback = NULL,
 		.flags = WDT_FLAG_RESET_SOC,
