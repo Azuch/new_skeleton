@@ -65,6 +65,7 @@ static bool sensor_hw_read(struct sensor_sample *out) {
 	}
 
 	out->value = counter * 10;
+	k_msgq_put(&sensor_data_q, out, K_NO_WAIT);
 	LOG_INF("Readed: %d", counter);
 	return true;
 }
@@ -92,7 +93,7 @@ static char* state_to_str(enum sensor_state s) {
 }
 //Define a set_state helper
 
-void set_state(enum sensor_state next) {
+static void set_state(enum sensor_state next) {
 	if (sensor_ctx.state != next) {
 		LOG_INF("State %s -> %s", state_to_str(sensor_ctx.state), state_to_str(next));
 		sensor_ctx.state = next;

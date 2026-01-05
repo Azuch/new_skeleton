@@ -2,6 +2,7 @@
 #include "app.h"
 
 
-void main(void) {
+int main(void) {
 	app_run();
+	return 0;
 }

@@ -1,0 +1,55 @@
+source "Kconfig.zephyr"
+
+# Kconfig for New Skeleton Application
+
+mainmenu "New Skeleton Application"
+
+config APP_WIFI_SSID
+    string "WiFi SSID"
+    default ""
+    help
+      The SSID of the WiFi network to connect to.
+
+config APP_WIFI_PSK
+    string "WiFi Password"
+    default ""
+    help
+      The password for the WiFi network.
+
+config APP_HTTP_HOST
+    string "HTTP Server Hostname"
+    default "localhost"
+    help
+      The hostname of the HTTP server to connect to.
+
+config APP_HTTP_IP
+    string "HTTP Server IP Address"
+    default "192.168.0.189"
+    help
+      The IP address of the HTTP server.
+
+config APP_HTTP_PORT
+    int "HTTP Server Port"
+    default 8080
+    help
+      The port for the HTTP server.
+
+config APP_HTTPS_PORT
+    int "HTTPS Server Port"
+    default 9443
+    help
+      The port for the HTTPS server.
+
+config APP_HTTP_PATH
+    string "HTTP Data Path"
+    default "/data"
+    help
+      The path for posting data on the HTTP server.
+
+config APP_OTA_PATH
+    string "OTA Update Path"
+    default "/ota"
+    help
+      The path for Over-The-Air updates on the HTTP server.
+
+
